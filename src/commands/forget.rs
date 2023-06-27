@@ -74,6 +74,11 @@ pub struct ForgetOptions {
     #[clap(flatten, next_help_heading = "Retention options")]
     #[serde(flatten)]
     keep: KeepOptions,
+
+    /// Output generated forget in json format
+    #[clap(long)]
+    #[merge(strategy = merge::bool::overwrite_false)]
+    json: bool,
 }
 
 impl Runnable for ForgetCmd {
@@ -111,6 +116,12 @@ impl ForgetCmd {
             };
             ForgetGroups(vec![item])
         };
+
+        if self.config.json {
+            let mut stdout = std::io::stdout();
+            serde_json::to_writer_pretty(&mut stdout, &groups.0)?;
+            return Ok(());
+        }
 
         for ForgetGroup { group, snapshots } in &groups.0 {
             if !group.is_empty() {
